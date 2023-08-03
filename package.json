@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "iconv-lite": "^0.4.15",
+    "lodash": "^4.17.21",
     "readable-stream": "^2.2.2"
   },
   "devDependencies": {
