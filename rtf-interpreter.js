@@ -164,6 +164,7 @@ class RTFInterpreter extends Writable {
   }
   ctrl$HYPERLINK(value) {
     this.group.ignorable = false;
+    this.group.parent.ignorable = false;
     this.group.addContent(new RTFA({ href: value, value: "Test" }));
   }
 
