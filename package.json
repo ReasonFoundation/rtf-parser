@@ -36,7 +36,8 @@
     "rtf-group.js",
     "rtf-document.js",
     "rtf-paragraph.js",
-    "rtf-span.js"
+    "rtf-span.js",
+    "rtf-a.js"
   ],
   "directories": {
     "test": "test"
