@@ -160,7 +160,7 @@ class RTFInterpreter extends Writable {
   }
 
   ctrl$fldrslt(value) {
-    console.log("fldrslt value: " + value);
+    // console.log("fldrslt value: " + value);
   }
   ctrl$HYPERLINK(value) {
     this.group.ignorable = false;

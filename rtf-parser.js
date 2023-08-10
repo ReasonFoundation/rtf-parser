@@ -261,7 +261,7 @@ class RTFParser extends Transform {
     this.fieldType = "";
   }
   emitStartGroup() {
-    console.log("EMIT START GROUP: " + this.processed);
+    // console.log("EMIT START GROUP: " + this.processed);
     if (this.fieldDepth > 0) {
       this.fieldDepth++;
     }
@@ -274,7 +274,7 @@ class RTFParser extends Transform {
     });
   }
   emitEndGroup() {
-    console.log("EMIT END GROUP: " + this.processed);
+    // console.log("EMIT END GROUP: " + this.processed);
     if (this.fieldDepth > 0) {
       this.fieldDepth--;
     }
