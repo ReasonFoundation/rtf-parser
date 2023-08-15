@@ -244,7 +244,12 @@ class RTFParser extends Transform {
     } else {
       this.push({
         type: "control-word",
-        value: this.fieldType === "" ? this.controlWord : this.fieldType,
+        value:
+          this.fieldType === ""
+            ? this.controlWord
+            : this.controlWord === "fldrslt"
+            ? this.controlWord
+            : this.fieldType,
         param:
           this.controlWordParam === ""
             ? false
@@ -258,7 +263,7 @@ class RTFParser extends Transform {
     }
     this.controlWord = "";
     this.controlWordParam = "";
-    this.fieldType = "";
+    // this.fieldType = "";
   }
   emitStartGroup() {
     // console.log("EMIT START GROUP: " + this.processed);
@@ -285,6 +290,9 @@ class RTFParser extends Transform {
       row: this.row,
       col: this.col,
     });
+    if (this.fieldType.length > 0 && this.fieldDepth === 0) {
+      this.fieldType = "";
+    }
   }
   emitIgnorable() {
     if (this.fieldDepth > 0) {

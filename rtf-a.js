@@ -1,7 +1,10 @@
 "use strict";
 
-class RTFA {
+const RTFGroup = require("./rtf-group");
+
+class RTFA extends RTFGroup {
   constructor(opts) {
+    super();
     if (!opts) opts = {};
     this.value = opts.value;
     this.style = opts.style || {};

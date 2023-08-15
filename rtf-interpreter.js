@@ -7,7 +7,7 @@ const RTFGroup = require("./rtf-group.js");
 const RTFParagraph = require("./rtf-paragraph.js");
 const RTFSpan = require("./rtf-span.js");
 const iconv = require("iconv-lite");
-const RTFA = require("./rtf-a.js");
+// const RTFA = require("./rtf-a.js");
 
 const availableCP = [
   437, 737, 775, 850, 852, 853, 855, 857, 858, 860, 861, 863, 865, 866, 869,
@@ -122,11 +122,21 @@ class RTFInterpreter extends Writable {
   }
   cmd$text(cmd) {
     this.flushHexStore();
-    if (!this.group) {
-      // an RTF fragment, missing the {\rtf1 header
-      this.group = this.doc;
+    if (this.group.parent instanceof Field) {
+      if (this.group.parent.href) {
+        this.group.parent.addContent(
+          new RTFA({ value: cmd.value, href: this.group.parent.href })
+        );
+      } else {
+        this.group.parent.addContent(new RTFSpan(cmd));
+      }
+    } else {
+      if (!this.group) {
+        // an RTF fragment, missing the {\rtf1 header
+        this.group = this.doc;
+      }
+      this.group.addContent(new RTFSpan(cmd));
     }
-    this.group.addContent(new RTFSpan(cmd));
   }
   cmd$controlWord(cmd) {
     this.flushHexStore();
@@ -159,13 +169,35 @@ class RTFInterpreter extends Writable {
     this.group = this.doc;
   }
 
+  ctrl$field(value) {
+    console.log("field value: " + value);
+    console.log("current group: " + JSON.stringify(this.group));
+    // this.group.parent.addContent(new RTFSpan({ value }));
+    // this.group.addContent(new Field(this.group || this.doc))
+    this.group = new Field(this.group || this.doc);
+  }
   ctrl$fldrslt(value) {
-    // console.log("fldrslt value: " + value);
+    console.log("fldrslt value: " + value);
+    console.log("current group: " + JSON.stringify(this.group));
+    // this.group.parent.addContent(new RTFSpan({ value }));
+  }
+  ctrl$fldinst(value) {
+    console.log("fldinst value: " + value);
+    console.log("current group: " + JSON.stringify(this.group));
+    // this.group.parent.addContent(new RTFSpan({ value }));
+    this.group = this.group.parent;
   }
   ctrl$HYPERLINK(value) {
     this.group.ignorable = false;
-    this.group.parent.ignorable = false;
-    this.group.addContent(new RTFA({ href: value, value: "Test" }));
+    // this.group.parent.ignorable = false;
+    // this.group.addContent(new RTFA({ href: value, value: "Test" }));
+    // this.group = new RTFA({ href: value });
+    // this.group.parent.href = value;
+    if (!(this.group instanceof Field)) {
+      this.group.parent.href = value;
+    } else {
+      this.group.href = value;
+    }
   }
 
   // new line
@@ -276,7 +308,7 @@ class RTFInterpreter extends Writable {
     this.group.charset = "CP850";
   }
   ctrl$ansicpg(codepage) {
-    if (availableCP.indexOf(codepage) === -1) {
+    if (availableCP.indexOf(Number(codepage)) === -1) {
       this.emit(
         "error",
         new Error("Codepage " + codepage + " is not available.")
@@ -454,6 +486,28 @@ class RTFInterpreter extends Writable {
   }
 }
 
+class Field extends RTFGroup {
+  constructor(parent) {
+    super(parent);
+  }
+}
+class FieldInstruction extends RTFGroup {
+  constructor(parent) {
+    super(parent);
+  }
+  addContent(text) {
+    this.parent.addContent(text);
+  }
+}
+
+class RTFA {
+  constructor(opts) {
+    if (!opts) opts = {};
+    this.value = opts.value;
+    this.style = opts.style || {};
+    this.href = opts.href || "";
+  }
+}
 class FontTable extends RTFGroup {
   constructor(parent) {
     super(parent);
