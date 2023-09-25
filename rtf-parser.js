@@ -86,9 +86,11 @@ class RTFParser extends Transform {
       this.emitIndexSubEntry();
       this.parserState = this.parseText;
     } else if (char === "\x0a") {
+      // Checks if the character (char) is a Line Feed (LF),
       this.emitEndParagraph();
       this.parserState = this.parseText;
     } else if (char === "\x0d") {
+      //Checks if the character (char) is a Carriage Return (CR),
       this.emitEndParagraph();
       this.parserState = this.parseText;
     } else {
@@ -234,23 +236,14 @@ class RTFParser extends Transform {
     this.text = "";
   }
   emitControlWord() {
-    if (this.controlWord === "field") {
-      this.fieldDepth++;
-    }
     this.emitText();
-
-    if (this.controlWord === "" && this.fieldType === "") {
+    if (this.controlWord === "") {
       this.emitError("empty control word");
     } else {
       this.push({
         type: "control-word",
-        value: this.fieldType === "" ? this.controlWord : this.fieldType,
-        param:
-          this.controlWordParam === ""
-            ? false
-            : Number.isInteger(this.controlWordParam)
-            ? Number(this.controlWordParam)
-            : this.controlWordParam,
+        value: this.controlWord,
+        param: this.controlWordParam !== "" && Number(this.controlWordParam),
         pos: this.char,
         row: this.row,
         col: this.col,
@@ -258,8 +251,37 @@ class RTFParser extends Transform {
     }
     this.controlWord = "";
     this.controlWordParam = "";
-    this.fieldType = "";
   }
+  // emitControlWord() {
+  //   if (this.controlWord === "field") {
+  //     this.fieldDepth++;
+  //   }
+  //   this.emitText();
+
+  //   if (this.controlWord === "" && this.fieldType === "") {
+  //     this.emitError("empty control word");
+  //   } else {
+  //     const testParam =
+  //       this.controlWordParam === ""
+  //         ? false
+  //         : Number.isInteger(this.controlWordParam)
+  //         ? Number(this.controlWordParam)
+  //         : this.controlWordParam;
+
+  //     this.push({
+  //       type: "control-word",
+  //       value: this.fieldType === "" ? this.controlWord : this.fieldType,
+  //       param: testParam,
+
+  //       pos: this.char,
+  //       row: this.row,
+  //       col: this.col,
+  //     });
+  //   }
+  //   this.controlWord = "";
+  //   this.controlWordParam = "";
+  //   this.fieldType = "";
+  // }
   emitStartGroup() {
     // console.log("EMIT START GROUP: " + this.processed);
     if (this.fieldDepth > 0) {

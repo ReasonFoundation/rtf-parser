@@ -1,7 +1,9 @@
 const fs = require("fs");
 const rtfParser = require("./index");
 
-const inputFile = "simpletest.rtf";
+// const inputFile = "test.rtf";
+const inputFile = "file.rtf";
+// const inputFile = "justbold.rtf";
 const outputFile = "output.json";
 
 rtfParser.stream(fs.createReadStream(inputFile), (err, doc) => {

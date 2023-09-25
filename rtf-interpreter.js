@@ -215,6 +215,7 @@ class RTFInterpreter extends Writable {
   }
   ctrl$b(set) {
     this.group.style.bold = set !== 0;
+    console.log("group style: ", this.group.style)
   }
   ctrl$i(set) {
     this.group.style.italic = set !== 0;

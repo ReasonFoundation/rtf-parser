@@ -3,24 +3,32 @@
   "version": "1.4.2",
   "description": "This is a general RTF parser.  It takes a text stream and produces a document object representing the parsed document.  In and of itself, this isn't super useful but it's the building block for other tools to convert RTF into other formats.",
   "main": "index.js",
+  "_type": "module",
   "dependencies": {
     "iconv-lite": "^0.4.15",
     "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "readable-stream": "^2.2.2"
   },
   "devDependencies": {
+    "chai": "^4.3.8",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.0.1",
     "standard": "^8.6.0",
+    "standard-version": "*",
     "tap": "^9.0.3",
     "weallbehave": "*",
-    "weallcontribute": "*",
-    "standard-version": "*"
+    "weallcontribute": "*"
   },
   "scripts": {
-    "test": "standard && tap test/",
+    "test": "tap -R spec '__tests__/*.js'",
+    "test:mocha": "mocha",
+    "watch": "nodemon rtf-parser-rewrite.js",
+    "old_test": "standard && tap test/",
     "prerelease": "npm t",
     "release": "standard-version -s",
     "postrelease": "npm publish && git push --follow-tags",
-    "pretest": "standard",
+    "oldpretest": "standard",
     "update-coc": "weallbehave -o . && git add CODE_OF_CONDUCT.md && git commit -m 'docs(coc): updated CODE_OF_CONDUCT.md'",
     "update-contrib": "weallcontribute -o . && git add CONTRIBUTING.md && git commit -m 'docs(contributing): updated CONTRIBUTING.md'"
   },

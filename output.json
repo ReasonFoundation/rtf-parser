@@ -1,0 +1,65 @@
+{
+  "content": [
+    {
+      "value": "bold ",
+      "style": {
+        "fontSize": 24,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "strikethrough": false,
+        "firstLineIndent": 0,
+        "indent": 0,
+        "align": "left",
+        "valign": "normal"
+      }
+    },
+    {
+      "value": "not bold ",
+      "style": {
+        "fontSize": 24,
+        "bold": false,
+        "italic": false,
+        "underline": false,
+        "strikethrough": false,
+        "firstLineIndent": 0,
+        "indent": 0,
+        "align": "left",
+        "valign": "normal"
+      }
+    },
+    {
+      "value": "italics ",
+      "style": {
+        "fontSize": 24,
+        "bold": false,
+        "italic": true,
+        "underline": false,
+        "strikethrough": false,
+        "firstLineIndent": 0,
+        "indent": 0,
+        "align": "left",
+        "valign": "normal"
+      }
+    }
+  ],
+  "fonts": [],
+  "colors": [],
+  "style": {
+    "fontSize": 24,
+    "bold": false,
+    "italic": false,
+    "underline": false,
+    "strikethrough": false,
+    "firstLineIndent": 0,
+    "indent": 0,
+    "align": "left",
+    "valign": "normal"
+  },
+  "ignorable": false,
+  "charset": "ASCII",
+  "marginLeft": 1800,
+  "marginRight": 1800,
+  "marginBottom": 1440,
+  "marginTop": 1440
+}
