@@ -10,3 +10,10 @@ then render based off what they are an instance of and what their properties are
 I'm not sure that the way things are starting and ending is correct. 
 For instance, all the bold, unbold, italic, and text on a newline all 
 should be children of fldrslt.
+
+this might be a problem exclusive to fields and fldrslts because otherwise you can start and end a group whenever
+might need to do something special just for fields
+
+test current functionality without fields
+
+also, setup the workaround for now
