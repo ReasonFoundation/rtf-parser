@@ -26,7 +26,7 @@ export class Parser {
     this.originalText = text;
     this.text = "";
     this.processed = "";
-    this.rootGroup = new Group(this);
+    this.rootGroup = new Group();
     this.currentGroup = this.rootGroup;
     this.groupStack = [];
 
@@ -54,16 +54,7 @@ export class Parser {
     const regex = /^[A-Z0-9]$/;
     return regex.test(char);
   }
-  startGroup(group) {
-    let newGroup = new Group(this);
 
-    if (group) {
-      newGroup = group;
-    }
-    this.currentGroup.addChild(newGroup);
-    this.groupStack.push(this.currentGroup);
-    this.currentGroup = newGroup;
-  }
   parseText(char) {
     if (char === "\\") {
       this.parserState = this.parseEscapes;
@@ -120,11 +111,12 @@ export class Parser {
       // subentry in an index entry
       this.emitIndexSubEntry();
       this.parserState = this.parseText;
-    } else if (char === "\x0a") {
+      // } else if (char === "\x0a") {
+    } else if (char === "\n") {
       //Checks if the character (char) is a Line Feed (LF),
       this.emitEndParagraph();
       this.parserState = this.parseText;
-    } else if (char === "\x0d") {
+    } else if (char === "\r") {
       //Checks if the character (char) is a Carriage Return (CR),
       this.emitEndParagraph();
       this.parserState = this.parseText;
@@ -195,14 +187,34 @@ export class Parser {
         console.log("Added text: " + this.text);
       }
     }
-    this.currentGroup.addText(this.text);
+
+    if (this.text === "") {
+      return;
+    }
+    const text = new Group(this.currentGroup);
+    text.style = cloneDeep(this.currentGroup.style);
+    text.content = this.text;
+    this.currentGroup.addChild(text);
     this.text = "";
+  }
+  startGroup(group) {
+    this.emitText();
+    let newGroup = new Group(this.currentGroup);
+
+    if (group) {
+      newGroup = group;
+    }
+    this.currentGroup.addChild(newGroup);
+    this.groupStack.push(this.currentGroup);
+    this.currentGroup = newGroup;
   }
   endGroup() {
     this.emitText();
     this.currentGroup = this.groupStack.pop();
   }
   applyControlWord(word, value) {
+    this.emitText();
+
     switch (word) {
       // Document control words
       case "rtf":
@@ -243,11 +255,11 @@ export class Parser {
         // this.currentGroup.style["bold"] = value !== "0";
         if (value === 0) {
           const clonedGroup = cloneDeep(this.currentGroup);
+          delete clonedGroup.type;
           delete clonedGroup.children;
           delete clonedGroup.content;
           delete clonedGroup.style.bold;
           clonedGroup.children = [];
-          clonedGroup.content = "";
           this.endGroup();
           this.startGroup(clonedGroup);
         } else {
@@ -257,11 +269,11 @@ export class Parser {
       case "i":
         if (value === 0) {
           const clonedGroup = cloneDeep(this.currentGroup);
+          delete clonedGroup.type;
           delete clonedGroup.children;
           delete clonedGroup.content;
           delete clonedGroup.style.italic;
           clonedGroup.children = [];
-          clonedGroup.content = "";
           this.endGroup();
           this.startGroup(clonedGroup);
         } else {
@@ -294,13 +306,6 @@ export class Parser {
 
       default:
         console.log(`Unhandled control word: ${word}`);
-    }
-
-    if (this.text === "") {
-      console.log("No text to add");
-    } else {
-      console.log("Added text: " + this.text);
-      this.currentGroup.addText(this.text);
     }
   }
   isUppercase(char) {
@@ -364,12 +369,10 @@ export class Group {
     this.content = "";
     // this.style = {};
     this.children = [];
-    // this.fieldInstruction = "";
-    // this.fieldResult = "";
   }
-  addText(content) {
-    this.content += content;
-  }
+  // addText(content) {
+  //   this.content += content;
+  // }
   addStyle(key, val) {
     if (typeof this.style === "undefined") {
       this.style = {};
@@ -385,6 +388,11 @@ export class Group {
   //   } else {
   //     this.content += content;
   //   }
+  // }
+  // addContent(node) {
+  //   node.style = cloneDeep(this.parent.style);
+
+  //   this.children.push(node);
   // }
   addChild(childGroup) {
     this.children.push(childGroup);
@@ -510,7 +518,7 @@ export class Group {
       //   (child) => child.type === "fldrslt" && child.content
       // );
       let resultChildren = this.findChildGroupsByFunc(
-        (child) => child.type === "fldrslt" && child.content
+        (child) => child.content !== ""
       );
 
       if (hrefChild) {
@@ -536,7 +544,11 @@ export class Group {
         return htmlContent;
       }
     } else {
-      if (this.children.length === 0) {
+      if (
+        this.children.length === 0 &&
+        typeof this.content !== "undefined" &&
+        this.content.length > 0
+      ) {
         // Default behavior: just return the content
         return renderItalics(renderBold(this.content));
       } else {
@@ -544,7 +556,11 @@ export class Group {
         for (let child of this.children) {
           htmlContent += child.render();
         }
-        return `<div>${htmlContent}</div>`;
+        if (htmlContent !== "") {
+          return `${htmlContent}`;
+        } else {
+          return "";
+        }
       }
     }
   }
@@ -569,7 +585,7 @@ const doubleBackslash = (inputString) => {
   return inputString.replace(/\\(.)/g, "\\\\\\\\$1");
 };
 // `{\rtf1{\field{\*\fldinst{HYPERLINK "i.me/"}}{\fldrslt \b oral arguments \b0 }}}`
-const rtfContent = fs.readFileSync("./file.rtf", "utf8");
+const rtfContent = fs.readFileSync("./fileWithNewLine.rtf", "utf8");
 
 let parser = new Parser(rtfContent);
 
@@ -678,6 +694,280 @@ const result = {
               children: [],
               type: "fldrslt",
               style: {},
+            },
+          ],
+          type: "field",
+        },
+      ],
+      version: 1,
+    },
+  ],
+};
+
+const result2 = {
+  parent: {},
+  content: "",
+  children: [
+    {
+      content: "",
+      children: [
+        {
+          content: "",
+          children: [
+            {
+              content: "",
+              children: [
+                {
+                  content: "",
+                  children: [],
+                  href: "i.me/",
+                },
+              ],
+              type: "fldinst",
+            },
+            {
+              content: "",
+              children: [
+                {
+                  content: "bold ",
+                  children: [],
+                },
+              ],
+              type: "fldrslt",
+              style: {
+                bold: true,
+              },
+            },
+            {
+              type: "fldrslt",
+              style: {
+                italic: true,
+              },
+              children: [
+                {
+                  content: "not bold ",
+                  children: [],
+                },
+                {
+                  content: "italics ",
+                  children: [],
+                },
+              ],
+              content: "",
+            },
+            {
+              type: "fldrslt",
+              style: {},
+              children: [],
+              content: "",
+            },
+          ],
+          type: "field",
+        },
+      ],
+      version: 1,
+    },
+  ],
+};
+
+const result3 = {
+  parent: null,
+  content: "",
+  children: [
+    {
+      content: "",
+      children: [
+        {
+          content: "",
+          children: [
+            {
+              content: "",
+              children: [
+                {
+                  content: "",
+                  children: [],
+                  href: "i.me/",
+                },
+              ],
+              type: "fldinst",
+            },
+            {
+              content: "",
+              children: [
+                {
+                  content: "bold ",
+                  children: [],
+                },
+              ],
+              type: "fldrslt",
+              style: {
+                bold: true,
+              },
+            },
+            {
+              type: "fldrslt",
+              style: {
+                italic: true,
+              },
+              children: [
+                {
+                  content: "not bold ",
+                  children: [],
+                },
+                {
+                  content: "italics ",
+                  children: [],
+                },
+              ],
+              content: "",
+            },
+            {
+              type: "fldrslt",
+              style: {},
+              children: [],
+              content: "",
+            },
+          ],
+          type: "field",
+        },
+      ],
+      version: 1,
+    },
+  ],
+};
+
+const result4 = {
+  parent: null,
+  content: "",
+  children: [
+    {
+      content: "",
+      children: [
+        {
+          content: "",
+          children: [
+            {
+              content: "",
+              children: [
+                {
+                  content: "",
+                  children: [],
+                  href: "i.me/",
+                },
+              ],
+              type: "fldinst",
+            },
+            {
+              content: "",
+              children: [
+                {
+                  content: "bold ",
+                  children: [],
+                  style: {
+                    bold: true,
+                  },
+                },
+              ],
+              type: "fldrslt",
+              style: {
+                bold: true,
+              },
+            },
+            {
+              type: "fldrslt",
+              style: {
+                italic: true,
+              },
+              children: [
+                {
+                  content: "not bold ",
+                  children: [],
+                  style: {},
+                },
+                {
+                  content: "italics ",
+                  children: [],
+                  style: {
+                    italic: true,
+                  },
+                },
+              ],
+              content: "",
+            },
+            {
+              type: "fldrslt",
+              style: {},
+              children: [],
+              content: "",
+            },
+          ],
+          type: "field",
+        },
+      ],
+      version: 1,
+    },
+  ],
+};
+
+const result5 = {
+  parent: null,
+  content: "",
+  children: [
+    {
+      content: "",
+      children: [
+        {
+          content: "",
+          children: [
+            {
+              content: "",
+              children: [
+                {
+                  content: "",
+                  children: [],
+                  href: "i.me/",
+                },
+              ],
+              type: "fldinst",
+            },
+            {
+              content: "",
+              children: [
+                {
+                  content: "bold ",
+                  children: [],
+                  style: {
+                    bold: true,
+                  },
+                },
+              ],
+              type: "fldrslt",
+              style: {
+                bold: true,
+              },
+            },
+            {
+              style: {
+                italic: true,
+              },
+              children: [
+                {
+                  content: "not bold ",
+                  children: [],
+                  style: {},
+                },
+                {
+                  content: "italics ",
+                  children: [],
+                  style: {
+                    italic: true,
+                  },
+                },
+              ],
+            },
+            {
+              style: {},
+              children: [],
             },
           ],
           type: "field",
